@@ -1,0 +1,14 @@
+timeout: 1800s
+steps:
+- name: 'ubuntu'
+  args: ['bash', './startflow.bash']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', 'asia.gcr.io/$PROJECT_ID/[DockerImageName]:$TAG_NAME', '.']
+  id: 'build-gcr'
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', 'asia.gcr.io/$PROJECT_ID/[DockerImageName]:$TAG_NAME']
+  id: 'push-gcr'
+  waitFor:
+  - 'build-gcr'
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['beta', 'run', 'deploy', '[cloud run name]', '--image', 'asia.gcr.io/$PROJECT_ID/[DockerImageName]:$TAG_NAME', '--region', 'us-central1']
